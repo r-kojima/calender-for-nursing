@@ -99,6 +99,12 @@ export default function CalendarScreen() {
     setCurrentMonth((prevMonth) => addMonths(prevMonth, 1));
   }, []);
 
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    setCurrentMonth(today);
+    setSelectedDate(today);
+  }, []);
+
   const daysInGrid = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
@@ -120,6 +126,11 @@ export default function CalendarScreen() {
         <Appbar.Content
           title={format(currentMonth, "yyyy年 M月", { locale: ja })}
           titleStyle={styles.headerTitle}
+        />
+        <Appbar.Action 
+          icon="calendar-today" 
+          onPress={goToToday}
+          accessibilityLabel="今日に戻る"
         />
         <Appbar.Action icon="chevron-right" onPress={goToNextMonth} />
       </Appbar.Header>
