@@ -74,12 +74,12 @@ const dummySchedules: Schedule[] = [
 
 export default function CalendarScreen() {
   const theme = useTheme();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  
+  const backgroundColor = useThemeColor({}, "background");
+  const textColor = useThemeColor({}, "text");
+
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  
+
   const parsedSchedules = useMemo(() => {
     return dummySchedules.map((schedule) => ({
       ...schedule,
@@ -108,7 +108,10 @@ export default function CalendarScreen() {
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, [currentMonth]);
 
-  const styles = useMemo(() => createStyles(theme, textColor), [theme, textColor]);
+  const styles = useMemo(
+    () => createStyles(theme, textColor),
+    [theme, textColor]
+  );
 
   return (
     <Surface style={[styles.container, { backgroundColor }]}>
@@ -120,7 +123,7 @@ export default function CalendarScreen() {
         />
         <Appbar.Action icon="chevron-right" onPress={goToNextMonth} />
       </Appbar.Header>
-      
+
       <View style={styles.content}>
         <View style={styles.weekHeader}>
           {weekDays.map((day) => (
@@ -145,8 +148,9 @@ export default function CalendarScreen() {
                 key={index}
                 style={[
                   styles.cell,
-                  isSelected && styles.selectedCell,
-                  isTodayDate && styles.todayCell,
+                  isSelected && isTodayDate && styles.selectedTodayCell,
+                  isSelected && !isTodayDate && styles.selectedCell,
+                  !isSelected && isTodayDate && styles.todayCell,
                 ]}
                 onPress={() => handleDatePress(day)}
                 activeOpacity={0.7}
@@ -156,22 +160,25 @@ export default function CalendarScreen() {
                     style={[
                       styles.dayText,
                       !isCurrentMonthDay && styles.otherMonthDayText,
-                      dayOfWeek === 0 && styles.sundayText,
-                      dayOfWeek === 6 && styles.saturdayText,
-                      isSelected && styles.selectedDayText,
-                      isTodayDate && styles.todayText,
+                      dayOfWeek === 0 && !isSelected && styles.sundayText,
+                      dayOfWeek === 6 && !isSelected && styles.saturdayText,
+                      isSelected && isTodayDate && styles.selectedTodayText,
+                      isSelected && !isTodayDate && styles.selectedDayText,
+                      !isSelected && isTodayDate && styles.todayText,
                     ]}
                   >
                     {format(day, "d")}
                   </Text>
-                  
+
                   {schedulesForDay.length > 0 && (
                     <View style={styles.scheduleContainer}>
                       {schedulesForDay.slice(0, 3).map((_, idx) => (
                         <View key={idx} style={styles.scheduleIndicator} />
                       ))}
                       {schedulesForDay.length > 3 && (
-                        <Text style={styles.moreIndicator}>+{schedulesForDay.length - 3}</Text>
+                        <Text style={styles.moreIndicator}>
+                          +{schedulesForDay.length - 3}
+                        </Text>
                       )}
                     </View>
                   )}
@@ -197,7 +204,7 @@ const createStyles = (theme: any, textColor: string) =>
     headerTitle: {
       color: textColor,
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     content: {
       flex: 1,
@@ -205,24 +212,24 @@ const createStyles = (theme: any, textColor: string) =>
       paddingTop: 8,
     },
     weekHeader: {
-      flexDirection: 'row',
+      flexDirection: "row",
       marginBottom: 8,
       paddingVertical: 8,
     },
     weekDayCell: {
       width: CELL_SIZE,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     weekDayText: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: "600",
       color: theme.colors.onSurfaceVariant,
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
     },
     grid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
     },
     cell: {
       width: CELL_SIZE,
@@ -233,28 +240,41 @@ const createStyles = (theme: any, textColor: string) =>
     },
     cellContent: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'flex-start',
+      alignItems: "center",
+      justifyContent: "flex-start",
       paddingTop: 6,
     },
     selectedCell: {
-      backgroundColor: theme.colors.primaryContainer,
+      backgroundColor: theme.colors.primary,
+      borderWidth: 2,
+      borderColor: theme.colors.primary,
     },
     todayCell: {
       backgroundColor: theme.colors.secondaryContainer,
+      borderWidth: 2,
+      borderColor: theme.colors.outline,
+    },
+    selectedTodayCell: {
+      backgroundColor: theme.colors.primary,
+      borderWidth: 2,
+      borderColor: theme.colors.secondary,
     },
     dayText: {
       fontSize: 16,
-      fontWeight: '500',
+      fontWeight: "500",
       color: textColor,
     },
     selectedDayText: {
-      color: theme.colors.onPrimaryContainer,
-      fontWeight: '700',
+      color: theme.colors.onPrimary,
+      fontWeight: "700",
+    },
+    selectedTodayText: {
+      color: theme.colors.onPrimary,
+      fontWeight: "700",
     },
     todayText: {
       color: theme.colors.onSecondaryContainer,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     otherMonthDayText: {
       color: theme.colors.onSurfaceDisabled,
@@ -266,11 +286,11 @@ const createStyles = (theme: any, textColor: string) =>
       color: theme.colors.primary,
     },
     scheduleContainer: {
-      flexDirection: 'row',
+      flexDirection: "row",
       marginTop: 4,
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
+      alignItems: "center",
+      flexWrap: "wrap",
+      justifyContent: "center",
     },
     scheduleIndicator: {
       width: 4,
@@ -283,7 +303,7 @@ const createStyles = (theme: any, textColor: string) =>
     moreIndicator: {
       fontSize: 8,
       color: theme.colors.onSurfaceVariant,
-      fontWeight: '600',
+      fontWeight: "600",
       marginLeft: 2,
     },
   });
