@@ -1,12 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  Dimensions,
-  TouchableOpacity,
-} from "react-native";
-import { Surface, Appbar, useTheme } from "react-native-paper";
+import { StyleSheet, View, Text, Dimensions } from "react-native";
+import { Surface, useTheme } from "react-native-paper";
 import {
   format,
   isSameDay,
@@ -17,17 +11,16 @@ import {
   endOfWeek,
   eachDayOfInterval,
   isSameMonth,
-  getDay,
   parseISO,
   isToday,
 } from "date-fns";
 import { ja } from "date-fns/locale";
 import type { Schedule } from "../../types/schedule";
 import { useThemeColor } from "../../hooks/useThemeColor";
+import { CalendarHeader } from "../../components/ui/CalendarHeader";
+import { CalendarCell } from "../../components/ui/CalendarCell";
 
-const { width } = Dimensions.get("window");
 const CALENDAR_PADDING = 16;
-const CELL_SIZE = Math.floor((width - CALENDAR_PADDING * 2) / 7);
 
 const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -75,7 +68,6 @@ const dummySchedules: Schedule[] = [
 export default function CalendarScreen() {
   const theme = useTheme();
   const backgroundColor = useThemeColor({}, "background");
-  const textColor = useThemeColor({}, "text");
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -114,26 +106,24 @@ export default function CalendarScreen() {
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, [currentMonth]);
 
+  const CELL_SIZE = useMemo(() => {
+    const { width } = Dimensions.get("window");
+    return Math.floor((width - CALENDAR_PADDING * 2) / 7);
+  }, []);
+
   const styles = useMemo(
-    () => createStyles(theme, textColor),
-    [theme, textColor]
+    () => createStyles(theme, CELL_SIZE),
+    [theme, CELL_SIZE]
   );
 
   return (
     <Surface style={[styles.container, { backgroundColor }]}>
-      <Appbar.Header style={styles.header}>
-        <Appbar.Action icon="chevron-left" onPress={goToPreviousMonth} />
-        <Appbar.Content
-          title={format(currentMonth, "yyyy年 M月", { locale: ja })}
-          titleStyle={styles.headerTitle}
-        />
-        <Appbar.Action 
-          icon="calendar-today" 
-          onPress={goToToday}
-          accessibilityLabel="今日に戻る"
-        />
-        <Appbar.Action icon="chevron-right" onPress={goToNextMonth} />
-      </Appbar.Header>
+      <CalendarHeader
+        title={format(currentMonth, "yyyy年 M月", { locale: ja })}
+        onPreviousPress={goToPreviousMonth}
+        onNextPress={goToNextMonth}
+        onTodayPress={goToToday}
+      />
 
       <View style={styles.content}>
         <View style={styles.weekHeader}>
@@ -149,52 +139,20 @@ export default function CalendarScreen() {
             const isSelected = selectedDate && isSameDay(day, selectedDate);
             const isCurrentMonthDay = isSameMonth(day, currentMonth);
             const isTodayDate = isToday(day);
-            const dayOfWeek = getDay(day);
             const schedulesForDay = parsedSchedules.filter((schedule) =>
               isSameDay(day, schedule.parsedDate)
             );
 
             return (
-              <TouchableOpacity
+              <CalendarCell
                 key={index}
-                style={[
-                  styles.cell,
-                  isSelected && isTodayDate && styles.selectedTodayCell,
-                  isSelected && !isTodayDate && styles.selectedCell,
-                  !isSelected && isTodayDate && styles.todayCell,
-                ]}
-                onPress={() => handleDatePress(day)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.cellContent}>
-                  <Text
-                    style={[
-                      styles.dayText,
-                      !isCurrentMonthDay && styles.otherMonthDayText,
-                      dayOfWeek === 0 && !isSelected && styles.sundayText,
-                      dayOfWeek === 6 && !isSelected && styles.saturdayText,
-                      isSelected && isTodayDate && styles.selectedTodayText,
-                      isSelected && !isTodayDate && styles.selectedDayText,
-                      !isSelected && isTodayDate && styles.todayText,
-                    ]}
-                  >
-                    {format(day, "d")}
-                  </Text>
-
-                  {schedulesForDay.length > 0 && (
-                    <View style={styles.scheduleContainer}>
-                      {schedulesForDay.slice(0, 3).map((_, idx) => (
-                        <View key={idx} style={styles.scheduleIndicator} />
-                      ))}
-                      {schedulesForDay.length > 3 && (
-                        <Text style={styles.moreIndicator}>
-                          +{schedulesForDay.length - 3}
-                        </Text>
-                      )}
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
+                date={day}
+                isSelected={!!isSelected}
+                isToday={isTodayDate}
+                isCurrentMonth={isCurrentMonthDay}
+                schedulesCount={schedulesForDay.length}
+                onPress={handleDatePress}
+              />
             );
           })}
         </View>
@@ -203,19 +161,10 @@ export default function CalendarScreen() {
   );
 }
 
-const createStyles = (theme: any, textColor: string) =>
+const createStyles = (theme: any, CELL_SIZE: number) =>
   StyleSheet.create({
     container: {
       flex: 1,
-    },
-    header: {
-      elevation: 0,
-      shadowOpacity: 0,
-    },
-    headerTitle: {
-      color: textColor,
-      fontSize: 18,
-      fontWeight: "600",
     },
     content: {
       flex: 1,
@@ -241,80 +190,5 @@ const createStyles = (theme: any, textColor: string) =>
     grid: {
       flexDirection: "row",
       flexWrap: "wrap",
-    },
-    cell: {
-      width: CELL_SIZE,
-      height: CELL_SIZE * 1.2,
-      padding: 4,
-      borderRadius: 8,
-      marginBottom: 2,
-    },
-    cellContent: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "flex-start",
-      paddingTop: 6,
-    },
-    selectedCell: {
-      backgroundColor: theme.colors.primary,
-      borderWidth: 2,
-      borderColor: theme.colors.primary,
-    },
-    todayCell: {
-      backgroundColor: theme.colors.secondaryContainer,
-      borderWidth: 2,
-      borderColor: theme.colors.outline,
-    },
-    selectedTodayCell: {
-      backgroundColor: theme.colors.primary,
-      borderWidth: 2,
-      borderColor: theme.colors.secondary,
-    },
-    dayText: {
-      fontSize: 16,
-      fontWeight: "500",
-      color: textColor,
-    },
-    selectedDayText: {
-      color: theme.colors.onPrimary,
-      fontWeight: "700",
-    },
-    selectedTodayText: {
-      color: theme.colors.onPrimary,
-      fontWeight: "700",
-    },
-    todayText: {
-      color: theme.colors.onSecondaryContainer,
-      fontWeight: "600",
-    },
-    otherMonthDayText: {
-      color: theme.colors.onSurfaceDisabled,
-    },
-    sundayText: {
-      color: theme.colors.error,
-    },
-    saturdayText: {
-      color: theme.colors.primary,
-    },
-    scheduleContainer: {
-      flexDirection: "row",
-      marginTop: 4,
-      alignItems: "center",
-      flexWrap: "wrap",
-      justifyContent: "center",
-    },
-    scheduleIndicator: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.colors.tertiary,
-      marginHorizontal: 1,
-      marginVertical: 1,
-    },
-    moreIndicator: {
-      fontSize: 8,
-      color: theme.colors.onSurfaceVariant,
-      fontWeight: "600",
-      marginLeft: 2,
     },
   });
