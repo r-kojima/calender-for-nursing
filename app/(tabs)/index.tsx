@@ -19,10 +19,10 @@ import type { Schedule } from "../../types/schedule";
 import { useThemeColor } from "../../hooks/useThemeColor";
 import { CalendarHeader } from "../../components/ui/CalendarHeader";
 import { CalendarCell } from "../../components/ui/CalendarCell";
+import { WeekHeader } from "../../components/ui/WeekHeader";
 
 const CALENDAR_PADDING = 16;
 
-const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
 
 // ダミーデータ（本来はAPIやローカルストレージから取得）
 const dummySchedules: Schedule[] = [
@@ -126,13 +126,7 @@ export default function CalendarScreen() {
       />
 
       <View style={styles.content}>
-        <View style={styles.weekHeader}>
-          {weekDays.map((day) => (
-            <View key={day} style={styles.weekDayCell}>
-              <Text style={styles.weekDayText}>{day}</Text>
-            </View>
-          ))}
-        </View>
+        <WeekHeader cellSize={CELL_SIZE} />
 
         <View style={styles.grid}>
           {daysInGrid.map((day, index) => {
@@ -170,22 +164,6 @@ const createStyles = (theme: any, CELL_SIZE: number) =>
       flex: 1,
       paddingHorizontal: CALENDAR_PADDING,
       paddingTop: 8,
-    },
-    weekHeader: {
-      flexDirection: "row",
-      marginBottom: 8,
-      paddingVertical: 8,
-    },
-    weekDayCell: {
-      width: CELL_SIZE,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    weekDayText: {
-      fontSize: 12,
-      fontWeight: "600",
-      color: theme.colors.onSurfaceVariant,
-      textTransform: "uppercase",
     },
     grid: {
       flexDirection: "row",
