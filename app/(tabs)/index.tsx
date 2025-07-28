@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { StyleSheet, View, Text, Dimensions } from "react-native";
+import { StyleSheet, View, Dimensions } from "react-native";
 import { Surface, useTheme } from "react-native-paper";
+import { PanGestureHandler, State } from "react-native-gesture-handler";
 import {
   format,
   isSameDay,
@@ -97,6 +98,21 @@ export default function CalendarScreen() {
     setSelectedDate(today);
   }, []);
 
+  const handlePanGesture = useCallback((event: any) => {
+    if (event.nativeEvent.state === State.END) {
+      const { translationX } = event.nativeEvent;
+      const threshold = 50; // 最小スワイプ距離
+
+      if (translationX > threshold) {
+        // 右スワイプ = 前の月へ
+        goToPreviousMonth();
+      } else if (translationX < -threshold) {
+        // 左スワイプ = 次の月へ
+        goToNextMonth();
+      }
+    }
+  }, [goToPreviousMonth, goToNextMonth]);
+
   const daysInGrid = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
@@ -125,32 +141,34 @@ export default function CalendarScreen() {
         onTodayPress={goToToday}
       />
 
-      <View style={styles.content}>
-        <WeekHeader cellSize={CELL_SIZE} />
+      <PanGestureHandler onHandlerStateChange={handlePanGesture}>
+        <View style={styles.content}>
+          <WeekHeader cellSize={CELL_SIZE} />
 
-        <View style={styles.grid}>
-          {daysInGrid.map((day, index) => {
-            const isSelected = selectedDate && isSameDay(day, selectedDate);
-            const isCurrentMonthDay = isSameMonth(day, currentMonth);
-            const isTodayDate = isToday(day);
-            const schedulesForDay = parsedSchedules.filter((schedule) =>
-              isSameDay(day, schedule.parsedDate)
-            );
+          <View style={styles.grid}>
+            {daysInGrid.map((day, index) => {
+              const isSelected = selectedDate && isSameDay(day, selectedDate);
+              const isCurrentMonthDay = isSameMonth(day, currentMonth);
+              const isTodayDate = isToday(day);
+              const schedulesForDay = parsedSchedules.filter((schedule) =>
+                isSameDay(day, schedule.parsedDate)
+              );
 
-            return (
-              <CalendarCell
-                key={index}
-                date={day}
-                isSelected={!!isSelected}
-                isToday={isTodayDate}
-                isCurrentMonth={isCurrentMonthDay}
-                schedulesCount={schedulesForDay.length}
-                onPress={handleDatePress}
-              />
-            );
-          })}
+              return (
+                <CalendarCell
+                  key={index}
+                  date={day}
+                  isSelected={!!isSelected}
+                  isToday={isTodayDate}
+                  isCurrentMonth={isCurrentMonthDay}
+                  schedulesCount={schedulesForDay.length}
+                  onPress={handleDatePress}
+                />
+              );
+            })}
+          </View>
         </View>
-      </View>
+      </PanGestureHandler>
     </Surface>
   );
 }
