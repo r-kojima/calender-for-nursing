@@ -16,7 +16,7 @@ export function WeekHeader({ cellSize }: WeekHeaderProps) {
     <View style={styles.weekHeader}>
       {weekDays.map((day, index) => (
         <View key={day} style={styles.weekDayCell}>
-          <Text 
+          <Text
             style={[
               styles.weekDayText,
               index === 0 && styles.sundayWeekText,
@@ -35,12 +35,12 @@ const createStyles = (theme: any, cellSize: number) =>
   StyleSheet.create({
     weekHeader: {
       flexDirection: "row",
-      marginBottom: 8,
-      paddingVertical: 8,
+      marginBottom: 24,
+      paddingVertical: 12,
     },
     weekDayCell: {
       width: cellSize,
-      height: 32,
+      height: 48,
       alignItems: "center",
       justifyContent: "center",
     },
