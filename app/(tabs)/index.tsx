@@ -24,7 +24,6 @@ import { WeekHeader } from "../../components/ui/WeekHeader";
 
 const CALENDAR_PADDING = 16;
 
-
 // ダミーデータ（本来はAPIやローカルストレージから取得）
 const dummySchedules: Schedule[] = [
   {
@@ -98,26 +97,29 @@ export default function CalendarScreen() {
     setSelectedDate(today);
   }, []);
 
-  const handlePanGesture = useCallback((event: any) => {
-    if (event.nativeEvent.state === State.END) {
-      const { translationX } = event.nativeEvent;
-      const threshold = 50; // 最小スワイプ距離
+  const handlePanGesture = useCallback(
+    (event: any) => {
+      if (event.nativeEvent.state === State.END) {
+        const { translationX } = event.nativeEvent;
+        const threshold = 50; // 最小スワイプ距離
 
-      if (translationX > threshold) {
-        // 右スワイプ = 前の月へ
-        goToPreviousMonth();
-      } else if (translationX < -threshold) {
-        // 左スワイプ = 次の月へ
-        goToNextMonth();
+        if (translationX > threshold) {
+          // 右スワイプ = 前の月へ
+          goToPreviousMonth();
+        } else if (translationX < -threshold) {
+          // 左スワイプ = 次の月へ
+          goToNextMonth();
+        }
       }
-    }
-  }, [goToPreviousMonth, goToNextMonth]);
+    },
+    [goToPreviousMonth, goToNextMonth]
+  );
 
   const daysInGrid = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
-    const startDate = startOfWeek(monthStart, { locale: ja }); // 週の開始を日曜日に
-    const endDate = endOfWeek(monthEnd, { locale: ja }); // 週の終わりを土曜日に
+    const startDate = startOfWeek(monthStart, { locale: ja });
+    const endDate = endOfWeek(monthEnd, { locale: ja });
 
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, [currentMonth]);
@@ -144,7 +146,6 @@ export default function CalendarScreen() {
       <PanGestureHandler onHandlerStateChange={handlePanGesture}>
         <View style={styles.content}>
           <WeekHeader cellSize={CELL_SIZE} />
-
           <View style={styles.grid}>
             {daysInGrid.map((day, index) => {
               const isSelected = selectedDate && isSameDay(day, selectedDate);
